@@ -33,20 +33,16 @@ import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.ui.draw.scale
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
@@ -176,9 +172,6 @@ fun KompactScreen(
     onDeleteOriginalsChange: (Boolean) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHome: () -> Unit,
-    onNavigateToAbout: () -> Unit,
-    onNavigateToContact: () -> Unit,
-    onNavigateToDonate: () -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
     onPickDefaultDestination: () -> Unit,
     onClearDefaultDestination: () -> Unit,
@@ -212,47 +205,6 @@ fun KompactScreen(
                     icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_about)) },
-                    selected = state.currentScreen == AppScreen.ABOUT,
-                    onClick = {
-                        onNavigateToAbout()
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.Info, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_donate)) },
-                    selected = state.currentScreen == AppScreen.DONATE,
-                    onClick = {
-                        onNavigateToDonate()
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_contact_us)) },
-                    selected = state.currentScreen == AppScreen.CONTACT,
-                    onClick = {
-                        onNavigateToContact()
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.Email, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                val uriHandler = LocalUriHandler.current
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_report_issue)) },
-                    selected = false,
-                    onClick = {
-                        uriHandler.openUri("https://git.naxod.com/luca/Kompact/issues")
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.BugReport, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
             }
         }
     ) {
@@ -278,8 +230,8 @@ fun KompactScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { onNavigateToDonate() }) {
-                            Icon(Icons.Filled.Favorite, contentDescription = stringResource(R.string.nav_donate))
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.nav_settings))
                         }
                     }
                 )
@@ -321,9 +273,6 @@ fun KompactScreen(
                     onClearDefaultDestination = onClearDefaultDestination,
                     modifier = modifier.padding(innerPadding)
                 )
-                AppScreen.ABOUT -> AboutScreen(modifier = modifier.padding(innerPadding))
-                AppScreen.CONTACT -> ContactScreen(modifier = modifier.padding(innerPadding))
-                AppScreen.DONATE -> DonateScreen(modifier = modifier.padding(innerPadding))
                 else -> {}
             }
         }
@@ -759,111 +708,6 @@ fun SettingsScreen(
         }
     }
 }
-
-@Composable
-fun AboutScreen(modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item { Text(stringResource(R.string.about_title), style = MaterialTheme.typography.headlineMedium) }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.mission), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.kompact_is_an_offline_file_compressor_designed_to_run_entirely_on_device_your_files_never_leave_your_phone_ensuring_complete_privacy),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.current_features), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.precision_compression_target_specific_file_sizes_or_quality_percentages_n) +
-                        "• Format Conversion: Switch easily between JPG, PNG, WebP, and more.\n" +
-                        "• Live Preview: Compare original vs. compressed results in real-time.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.roadmap), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.we_are_working_to_make_kompact_the_ultimate_optimizer_future_updates_will_bring_support_for_pdf_documents_audio_tracks_and_video_files),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.open_source), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.this_project_is_open_source_under_the_apache_2_0_license_you_can_inspect_the_code_report_issues_or_contribute_on_our_repository),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    val uriHandler = LocalUriHandler.current
-                    TextButton(onClick = { uriHandler.openUri("https://git.naxod.com/luca/Kompact") }) {
-                        Text(stringResource(R.string.visit_repository))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DonateScreen(modifier: Modifier = Modifier) {
-    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item { Text(stringResource(R.string.support_development), style = MaterialTheme.typography.headlineMedium) }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.a_personal_note), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.i_built_kompact_because_i_believe_essential_tools_should_be_simple_private_and_free_of_ads_or_tracking_i_work_on_this_in_my_spare_time_driven_by_the_idea_of_making_a_useful_utility_for_everyone),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-        item {
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.support), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.if_kompact_has_saved_you_space_or_time_please_consider_supporting_its_development_your_donation_directly_helps_me_dedicate_more_hours_to_adding_features_like_pdf_audio_and_video_support_and_keeps_the_project_independent_and_sustainable),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Button(onClick = { uriHandler.openUri("https://liberapay.com/naxod/") }) {
-                        Icon(Icons.Default.Favorite, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.nav_donate))
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 fun SourceCard(
@@ -2389,9 +2233,6 @@ private fun PreviewKompact() {
             onResetEditsClick = {},
             onNavigateToSettings = {},
             onNavigateToHome = {},
-            onNavigateToAbout = {},
-            onNavigateToContact = {},
-            onNavigateToDonate = {},
             onThemeModeChange = {},
             onPickDefaultDestination = {},
             onClearDefaultDestination = {},

@@ -2,7 +2,7 @@ package com.kompact.model
 
 import android.net.Uri
 
-enum class AppScreen { HOME, SETTINGS, ABOUT, DONATE, CONTACT }
+enum class AppScreen { HOME, SETTINGS }
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 

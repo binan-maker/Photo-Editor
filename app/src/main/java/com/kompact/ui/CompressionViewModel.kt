@@ -620,18 +620,6 @@ class CompressionViewModel(application: Application) : AndroidViewModel(applicat
         _state.update { it.copy(currentScreen = AppScreen.HOME) }
     }
 
-    fun navigateToAbout() {
-        _state.update { it.copy(currentScreen = AppScreen.ABOUT) }
-    }
-
-    fun navigateToDonate() {
-        _state.update { it.copy(currentScreen = AppScreen.DONATE) }
-    }
-
-    fun navigateToContact() {
-        _state.update { it.copy(currentScreen = AppScreen.CONTACT) }
-    }
-
     fun setDefaultDestinationFolder(uriString: String) {
         viewModelScope.launch {
             preferencesRepository.setDefaultDestinationFolder(uriString)

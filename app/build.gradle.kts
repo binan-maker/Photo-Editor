@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.photoeditor"
+    namespace = "com.kompact"
     compileSdk = 36
 
     val keystorePath = System.getenv("KS_PATH")
@@ -15,7 +15,7 @@ android {
         .all { !it.isNullOrBlank() }
 
     defaultConfig {
-        applicationId = "com.photoeditor"
+        applicationId = "com.binan.photoeditor"
         minSdk = 24
         targetSdk = 36
         versionCode = 19
