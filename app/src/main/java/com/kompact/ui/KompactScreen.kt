@@ -171,77 +171,83 @@ fun KompactScreen(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-            topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    title = {
-                        Column(horizontalAlignment = Alignment.Start) {
-                            Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
-                            Text(
-                                text = stringResource(R.string.subtitle),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+        topBar = {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                ),
+                tonalElevation = 2.dp,
+                title = {
+                    Column(horizontalAlignment = Alignment.Start) {
+                        Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            text = if (state.currentScreen == AppScreen.SETTINGS) {
+                                stringResource(R.string.nav_settings)
+                            } else {
+                                stringResource(R.string.subtitle)
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = if (state.currentScreen == AppScreen.SETTINGS) {
+                    {
+                        IconButton(onClick = onNavigateToHome) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_home))
                         }
-                    },
-                    navigationIcon = if (state.currentScreen == AppScreen.SETTINGS) {
-                        {
-                            IconButton(onClick = onNavigateToHome) {
-                                Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_home))
-                            }
-                        }
-                    } else null,
-                    actions = if (state.currentScreen == AppScreen.HOME) {
-                        {
+                    }
+                } else null,
+                actions = if (state.currentScreen == AppScreen.HOME) {
+                    {
                         IconButton(onClick = onNavigateToSettings) {
                             Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.nav_settings))
                         }
-                        }
-                    } else null
-                )
-            }
-        ) { innerPadding ->
-            when (state.currentScreen) {
-                AppScreen.HOME -> HomeScreen(
-                    state = state,
-                    onPickFiles = onPickFiles,
-                    onCompressClick = onCompressClick,
-                    onImageConfigChange = onImageConfigChange,
-                    onRemoveFile = onRemoveFile,
-                    onClearSelection = onClearSelection,
-                    onPickDestination = onPickDestination,
-                    onClearDestination = onClearDestination,
-                    onExifDataChange = onExifDataChange,
-                    onToggleTextEditor = onToggleTextEditor,
-                    onTextConfigChange = onTextConfigChange,
-                    onToggleExifEditor = onToggleExifEditor,
-                    onToggleCropEditor = onToggleCropEditor,
-                    onCropBoundsChange = onCropBoundsChange,
-                    onToggleResizeEditor = onToggleResizeEditor,
-                    onResizeConfigChange = onResizeConfigChange,
-                    
-                    onBackgroundConfigChange = onBackgroundConfigChange,
-                    onToggleColorFilterEditor = onToggleColorFilterEditor,
-                    onColorFilterChange = onColorFilterChange,
-                    onRotate = onRotate,
-                    onResetEditsClick = onResetEditsClick,
-                    onDeleteOriginalsChange = onDeleteOriginalsChange,
-                    modifier = modifier.padding(innerPadding)
-                )
-                AppScreen.SETTINGS -> SettingsScreen(
-                    defaultDestinationFolder = state.defaultDestinationFolder,
-                    defaultDownloadsLabel = state.defaultDownloadsLabel,
-                    themeMode = state.themeMode,
-                    onThemeModeChange = onThemeModeChange,
-                    onPickDefaultDestination = onPickDefaultDestination,
-                    onClearDefaultDestination = onClearDefaultDestination,
-                    modifier = modifier.padding(innerPadding)
-                )
-                else -> {}
-            }
+                    }
+                } else null
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        when (state.currentScreen) {
+            AppScreen.HOME -> HomeScreen(
+                state = state,
+                onPickFiles = onPickFiles,
+                onCompressClick = onCompressClick,
+                onImageConfigChange = onImageConfigChange,
+                onRemoveFile = onRemoveFile,
+                onClearSelection = onClearSelection,
+                onPickDestination = onPickDestination,
+                onClearDestination = onClearDestination,
+                onExifDataChange = onExifDataChange,
+                onToggleTextEditor = onToggleTextEditor,
+                onTextConfigChange = onTextConfigChange,
+                onToggleExifEditor = onToggleExifEditor,
+                onToggleCropEditor = onToggleCropEditor,
+                onCropBoundsChange = onCropBoundsChange,
+                onToggleResizeEditor = onToggleResizeEditor,
+                onResizeConfigChange = onResizeConfigChange,
+                onBackgroundConfigChange = onBackgroundConfigChange,
+                onToggleColorFilterEditor = onToggleColorFilterEditor,
+                onColorFilterChange = onColorFilterChange,
+                onRotate = onRotate,
+                onResetEditsClick = onResetEditsClick,
+                onDeleteOriginalsChange = onDeleteOriginalsChange,
+                modifier = modifier.padding(innerPadding)
+            )
+            AppScreen.SETTINGS -> SettingsScreen(
+                defaultDestinationFolder = state.defaultDestinationFolder,
+                defaultDownloadsLabel = state.defaultDownloadsLabel,
+                themeMode = state.themeMode,
+                onThemeModeChange = onThemeModeChange,
+                onPickDefaultDestination = onPickDefaultDestination,
+                onClearDefaultDestination = onClearDefaultDestination,
+                modifier = modifier.padding(innerPadding)
+            )
+            else -> {}
         }
+    }
 }
 
 @Composable
@@ -317,9 +323,9 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(top = 20.dp, bottom = 36.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item {
             SourceCard(
@@ -535,13 +541,26 @@ fun SettingsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(top = 20.dp, bottom = 36.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        item { Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium) }
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    text = stringResource(R.string.settings_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium)
 
@@ -620,7 +639,11 @@ fun SettingsScreen(
         }
 
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.default_dest), style = MaterialTheme.typography.titleMedium)
                     Text(
@@ -642,7 +665,11 @@ fun SettingsScreen(
         }
 
         item {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.theme_title), style = MaterialTheme.typography.titleMedium)
 
@@ -683,7 +710,10 @@ fun SourceCard(
     onPickFiles: () -> Unit,
     errorMessage: String?,
 ) {
-    Card {
+    Card(
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(

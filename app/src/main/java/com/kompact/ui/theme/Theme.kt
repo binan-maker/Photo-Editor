@@ -2,9 +2,12 @@ package com.kompact.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import com.kompact.model.ThemeMode
 
 private val DarkColors = darkColorScheme(
@@ -61,6 +64,12 @@ private val LightColors = lightColorScheme(
     surfaceTint = md_theme_light_surfaceTint,
 )
 
+private val PhotoEditorShapes = Shapes(
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(24.dp)
+)
+
 @Composable
 fun KompactTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -76,6 +85,7 @@ fun KompactTheme(
     MaterialTheme(
         colorScheme = colors,
         typography = Typography,
+        shapes = PhotoEditorShapes,
         content = content
     )
 }
