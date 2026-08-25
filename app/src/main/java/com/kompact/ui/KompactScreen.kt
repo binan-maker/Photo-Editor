@@ -43,7 +43,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Storage
@@ -55,12 +55,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -137,8 +132,6 @@ import com.kompact.model.CompressionResult
 import com.kompact.model.CropBounds
 import com.kompact.model.ImagePreviewPayload
 import com.kompact.model.ThemeMode
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ModalDrawerSheet
 import com.kompact.model.CompressionGoal
 import java.util.Locale
 import kotlin.math.max
@@ -177,38 +170,7 @@ fun KompactScreen(
     onClearDefaultDestination: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(stringResource(R.string.app_name), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineSmall)
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_home)) },
-                    selected = state.currentScreen == AppScreen.HOME,
-                    onClick = {
-                        onNavigateToHome()
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = state.currentScreen == AppScreen.SETTINGS,
-                    onClick = {
-                        onNavigateToSettings()
-                        scope.launch { drawerState.close() }
-                    },
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-            }
-        }
-    ) {
-        Scaffold(
+    Scaffold(
             topBar = {
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -224,16 +186,20 @@ fun KompactScreen(
                             )
                         }
                     },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                    navigationIcon = if (state.currentScreen == AppScreen.SETTINGS) {
+                        {
+                            IconButton(onClick = onNavigateToHome) {
+                                Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_home))
+                            }
                         }
-                    },
-                    actions = {
+                    } else null,
+                    actions = if (state.currentScreen == AppScreen.HOME) {
+                        {
                         IconButton(onClick = onNavigateToSettings) {
                             Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.nav_settings))
                         }
-                    }
+                        }
+                    } else null
                 )
             }
         ) { innerPadding ->
@@ -276,7 +242,6 @@ fun KompactScreen(
                 else -> {}
             }
         }
-    }
 }
 
 @Composable
