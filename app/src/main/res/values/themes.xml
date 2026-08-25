@@ -3,5 +3,7 @@
     <style name="Theme.Kompact" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowSplashScreenBackground">#120A2E</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/photo_editor_logo</item>
     </style>
 </resources>
