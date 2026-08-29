@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
@@ -86,7 +87,9 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.consumeAllChanges
@@ -105,6 +108,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.window.Dialog
@@ -157,7 +161,7 @@ fun KompactScreen(
     onCropBoundsChange: (com.kompact.model.CropBounds?) -> Unit,
     onToggleResizeEditor: () -> Unit,
     onResizeConfigChange: (com.kompact.model.ResizeConfig?) -> Unit,
-    
+
     onBackgroundConfigChange: (com.kompact.model.BackgroundConfig?) -> Unit,
     onToggleColorFilterEditor: () -> Unit,
     onColorFilterChange: (com.kompact.model.ColorFilterConfig?) -> Unit,
@@ -175,34 +179,84 @@ fun KompactScreen(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 ),
                 title = {
-                    Column(horizontalAlignment = Alignment.Start) {
-                        Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
-                        Text(
-                            text = if (state.currentScreen == AppScreen.SETTINGS) {
-                                stringResource(R.string.nav_settings)
-                            } else {
-                                stringResource(R.string.subtitle)
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(40.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (state.currentScreen == AppScreen.SETTINGS) {
+                                        Icons.Default.Settings
+                                    } else {
+                                        Icons.Default.Image
+                                    },
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.spacedBy(1.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = if (state.currentScreen == AppScreen.SETTINGS) {
+                                    stringResource(R.string.nav_settings)
+                                } else {
+                                    stringResource(R.string.subtitle)
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
                     if (state.currentScreen == AppScreen.SETTINGS) {
-                        IconButton(onClick = onNavigateToHome) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_home))
+                        IconButton(
+                            onClick = onNavigateToHome,
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
+                        ) {
+                            Icon(
+                                Icons.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.nav_home),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 },
                 actions = {
                     if (state.currentScreen == AppScreen.HOME) {
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.nav_settings))
+                        IconButton(
+                            onClick = onNavigateToSettings,
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.72f))
+                        ) {
+                            Icon(
+                                Icons.Filled.Settings,
+                                contentDescription = stringResource(R.string.nav_settings),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
                         }
                     }
                 }
@@ -268,7 +322,7 @@ fun HomeScreen(
     onCropBoundsChange: (CropBounds?) -> Unit,
     onToggleResizeEditor: () -> Unit,
     onResizeConfigChange: (com.kompact.model.ResizeConfig?) -> Unit,
-    
+
     onBackgroundConfigChange: (com.kompact.model.BackgroundConfig?) -> Unit,
     onToggleColorFilterEditor: () -> Unit,
     onColorFilterChange: (com.kompact.model.ColorFilterConfig?) -> Unit,
@@ -306,8 +360,8 @@ fun HomeScreen(
     val referenceBytes = state.selectedFiles.sumOf { it.sizeBytes }.coerceAtLeast(1L)
     val showLivePreviewCard = remember(state.livePreview) {
         state.livePreview.kind != PreviewKind.NONE ||
-            state.livePreview.isGenerating ||
-            state.livePreview.errorMessage != null
+                state.livePreview.isGenerating ||
+                state.livePreview.errorMessage != null
     }
     val cropApplied = remember(state.imageConfig.cropBounds) {
         state.imageConfig.cropBounds?.isFull() == false
@@ -323,10 +377,13 @@ fun HomeScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
-        contentPadding = PaddingValues(top = 20.dp, bottom = 36.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(horizontal = 18.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            HomeIntro()
+        }
         item {
             SourceCard(
                 files = state.selectedFiles,
@@ -380,23 +437,23 @@ fun HomeScreen(
             Box {
                 Box(modifier = if (state.selectedFiles.isEmpty()) Modifier.alpha(0.38f) else Modifier) {
                     OutputCard(
-                    category = state.sourceCategory,
-                    imageConfig = state.imageConfig,
-                    onImageConfigChange = onImageConfigChange,
-                    defaultFormatLabel = defaultFormatLabel,
-                    originalFormat = originalFormat,
-                    defaultFileName = defaultFileName,
-                    destinationFolder = state.destinationFolder,
-                    defaultDestinationLabel = defaultDestinationLabel,
-                    onPickDestination = onPickDestination,
-                    onClearDestination = onClearDestination,
-                    referenceBytes = referenceBytes,
-                    liveEstimateBytes = state.livePreview.estimatedBatchBytes.takeIf { state.livePreview.kind == PreviewKind.IMAGE && it > 0L },
-                    selectedFilesCount = state.selectedFiles.size,
-                    exifEditingEnabled = exifEditingEnabled || state.selectedFiles.isEmpty(),
-                    isEditingExif = state.isExifEditorVisible,
-                    onToggleExifEditor = onToggleExifEditor,
-                )
+                        category = state.sourceCategory,
+                        imageConfig = state.imageConfig,
+                        onImageConfigChange = onImageConfigChange,
+                        defaultFormatLabel = defaultFormatLabel,
+                        originalFormat = originalFormat,
+                        defaultFileName = defaultFileName,
+                        destinationFolder = state.destinationFolder,
+                        defaultDestinationLabel = defaultDestinationLabel,
+                        onPickDestination = onPickDestination,
+                        onClearDestination = onClearDestination,
+                        referenceBytes = referenceBytes,
+                        liveEstimateBytes = state.livePreview.estimatedBatchBytes.takeIf { state.livePreview.kind == PreviewKind.IMAGE && it > 0L },
+                        selectedFilesCount = state.selectedFiles.size,
+                        exifEditingEnabled = exifEditingEnabled || state.selectedFiles.isEmpty(),
+                        isEditingExif = state.isExifEditorVisible,
+                        onToggleExifEditor = onToggleExifEditor,
+                    )
                 }
                 if (state.selectedFiles.isEmpty()) {
                     Box(
@@ -410,13 +467,13 @@ fun HomeScreen(
                 }
             }
         }
-        
+
         if (state.selectedFiles.isNotEmpty()) {
             item {
-                val isCompleted = state.totalCount > 0 && 
-                                  state.processedCount == state.totalCount && 
-                                  !state.isProcessing && 
-                                  state.results.isNotEmpty()
+                val isCompleted = state.totalCount > 0 &&
+                        state.processedCount == state.totalCount &&
+                        !state.isProcessing &&
+                        state.results.isNotEmpty()
                 if (!isCompleted) {
                     PrimaryActionBar(
                         isProcessing = state.isProcessing,
@@ -442,9 +499,9 @@ fun HomeScreen(
         if (state.selectedFiles.size > 1) {
             RemoveExifDialog(
                 stripExif = state.imageConfig.stripExif,
-                onStripExifChange = { strip -> 
+                onStripExifChange = { strip ->
                     onImageConfigChange(state.imageConfig.copy(stripExif = strip))
-                    onToggleExifEditor() 
+                    onToggleExifEditor()
                 },
                 onDismiss = onToggleExifEditor
             )
@@ -478,7 +535,7 @@ fun HomeScreen(
         )
     }
 
-    
+
 
     if (state.isColorFilterEditorVisible && state.sourceCategory == SourceCategory.IMAGE) {
         val showJpegWarning = state.imageConfig.format == com.kompact.model.ImageOutputFormat.JPG
@@ -515,7 +572,7 @@ fun HomeScreen(
             currentRotation = state.imageConfig.rotationDegrees,
             previewUri = state.selectedFiles.firstOrNull()?.uri,
             colorFilter = state.imageConfig.colorFilterConfig,
-            onConfirm = { newRotation -> 
+            onConfirm = { newRotation ->
                 val absoluteRotation = if (newRotation < 0f) newRotation + 360f else newRotation
                 onRotate(absoluteRotation - state.imageConfig.rotationDegrees)
             },
@@ -541,28 +598,27 @@ fun SettingsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
-        contentPadding = PaddingValues(top = 20.dp, bottom = 36.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(horizontal = 18.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium)
-                Text(
-                    text = stringResource(R.string.settings_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            SettingsIntro()
         }
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(26.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium)
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    SettingsSectionHeader(
+                        icon = Icons.Default.Language,
+                        title = stringResource(R.string.language),
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
 
                     val defaultLanguage = stringResource(R.string.default_text)
                     val locales = remember {
@@ -616,7 +672,10 @@ fun SettingsScreen(
                                 onValueChange = {},
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier.menuAnchor()
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp)
                             )
                             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                 locales.forEach { (tag, label) ->
@@ -641,22 +700,51 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(26.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.default_dest), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        text = defaultDestinationFolder?.let { getFolderDisplayName(Uri.parse(it)) } ?: defaultDownloadsLabel.ifBlank { "Default Dir" },
-                        style = MaterialTheme.typography.bodyMedium
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    SettingsSectionHeader(
+                        icon = Icons.Default.Folder,
+                        title = stringResource(R.string.default_dest),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = onPickDefaultDestination) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+                    ) {
+                        Text(
+                            text = defaultDestinationFolder?.let { getFolderDisplayName(Uri.parse(it)) } ?: defaultDownloadsLabel.ifBlank { "Default Dir" },
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Button(
+                            onClick = onPickDefaultDestination,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
                             Icon(Icons.Filled.Folder, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.dest_folder))
                         }
-                        TextButton(onClick = onClearDefaultDestination, enabled = defaultDestinationFolder != null) {
+                        TextButton(
+                            onClick = onClearDefaultDestination,
+                            enabled = defaultDestinationFolder != null,
+                            modifier = Modifier.align(Alignment.End),
+                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
                             Text(stringResource(R.string.reset_default))
                         }
                     }
@@ -667,11 +755,17 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(26.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.theme_title), style = MaterialTheme.typography.titleMedium)
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SettingsSectionHeader(
+                        icon = Icons.Default.Palette,
+                        title = stringResource(R.string.theme_title),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
 
                     @Composable
                     fun labelFor(mode: ThemeMode): String = when (mode) {
@@ -684,7 +778,10 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onThemeModeChange(mode) },
+                                .heightIn(min = 52.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable { onThemeModeChange(mode) }
+                                .padding(horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
@@ -702,6 +799,131 @@ fun SettingsScreen(
 }
 
 @Composable
+private fun SettingsIntro() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "WORKSPACE PREFERENCES",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.2.sp
+            )
+            Text(
+                text = stringResource(R.string.nav_settings),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = stringResource(R.string.settings_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Surface(
+            modifier = Modifier.size(54.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            tonalElevation = 1.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSectionHeader(
+    icon: ImageVector,
+    title: String,
+    containerColor: Color,
+    iconTint: Color,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(30.dp),
+            shape = RoundedCornerShape(10.dp),
+            color = containerColor
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(17.dp)
+                )
+            }
+        }
+        Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun HomeIntro() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "ON-DEVICE WORKSPACE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.2.sp
+            )
+            Text(
+                text = "Make room for what matters.",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "Compress and refine your files without sending them anywhere.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Surface(
+            modifier = Modifier.size(54.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            tonalElevation = 1.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun SourceCard(
     files: List<SelectedFileDescriptor>,
     selectionMessage: String?,
@@ -711,10 +933,11 @@ fun SourceCard(
     errorMessage: String?,
 ) {
     Card(
-        shape = MaterialTheme.shapes.large,
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -723,9 +946,28 @@ fun SourceCard(
             ) {
                 Column(
                     modifier = Modifier.padding(end = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(stringResource(R.string.files), style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(30.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Folder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+                        }
+                        Text(stringResource(R.string.files), style = MaterialTheme.typography.titleMedium)
+                    }
                     if (files.isNotEmpty()) {
                         Text(
                             text = "${files.size} ${stringResource(R.string.items_selected)}",
@@ -734,14 +976,17 @@ fun SourceCard(
                         )
                     }
                 }
-                
+
                 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
                 androidx.compose.foundation.layout.FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (files.isNotEmpty()) {
-                        OutlinedButton(onClick = onPickFiles) {
+                        OutlinedButton(
+                            onClick = onPickFiles,
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
                             Icon(Icons.Default.CloudUpload, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.add_more), textAlign = TextAlign.Center)
@@ -749,7 +994,10 @@ fun SourceCard(
                     }
                     TextButton(
                         onClick = onClearSelection,
-                        enabled = files.isNotEmpty()
+                        enabled = files.isNotEmpty(),
+                        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
                         Text(stringResource(R.string.clear_all), textAlign = TextAlign.Center)
                     }
@@ -770,13 +1018,19 @@ fun SourceCard(
                 ) {
                     items(count = files.size) { index ->
                         val file = files[index]
-                        if (file.mimeType?.startsWith("image/") == true) {
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+                        ) {
+                            if (file.mimeType?.startsWith("image/") == true) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     AsyncImage(
                                         model = file.uri,
                                         contentDescription = null,
-                                        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp)),
+                                        modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)),
                                         contentScale = ContentScale.Crop
                                     )
                                     Spacer(Modifier.width(12.dp))
@@ -788,17 +1042,20 @@ fun SourceCard(
                                         Icon(Icons.Default.Close, contentDescription = "Remove")
                                     }
                                 }
-                            }
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(48.dp))
-                                Spacer(Modifier.width(12.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(file.displayName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(file.sizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                IconButton(onClick = { onRemoveFile(file.uri) }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Remove")
+                            } else {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(48.dp))
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(file.displayName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(file.sizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    IconButton(onClick = { onRemoveFile(file.uri) }) {
+                                        Icon(Icons.Default.Close, contentDescription = "Remove")
+                                    }
                                 }
                             }
                         }
@@ -814,15 +1071,46 @@ private fun SourceEmptyState(onPickFiles: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f))
+            .clickable(onClick = onPickFiles)
+            .padding(horizontal = 20.dp, vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
-        Button(onClick = onPickFiles) {
+        Surface(
+            modifier = Modifier.size(52.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Default.CloudUpload,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.select_images_to_compress),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Text(
+            text = "Choose images from your device to get started.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Button(
+            onClick = onPickFiles,
+            shape = RoundedCornerShape(14.dp),
+            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 11.dp)
+        ) {
             Icon(Icons.Default.CloudUpload, contentDescription = null)
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.select_images_to_compress), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.select_images))
         }
     }
 }
@@ -865,26 +1153,53 @@ fun PrimaryActionBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 2.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
+        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-                val processingText = stringResource(R.string.processing_dots)
-                val readyText = stringResource(R.string.ready_to_process)
-                Text(
-                    text = if (isProcessing) processingText else readyText,
-                    style = MaterialTheme.typography.titleMedium
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    val processingText = stringResource(R.string.processing_dots)
+                    val readyText = stringResource(R.string.ready_to_process)
+                    Text(
+                        text = if (isProcessing) processingText else readyText,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = "Your selected files are ready.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp)
+                        .padding(top = 2.dp)
                         .clickable(enabled = !isProcessing) {
                             if (deleteOriginals) {
                                 onDeleteOriginalsChange(false)
@@ -908,7 +1223,7 @@ fun PrimaryActionBar(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp)
+                        .padding(top = 2.dp)
                         .clickable(enabled = !isProcessing) {
                             onImageConfigChange(imageConfig.copy(preserveSourceDate = !imageConfig.preserveSourceDate))
                         },
@@ -929,7 +1244,10 @@ fun PrimaryActionBar(
             Button(
                 onClick = onCompressClick,
                 enabled = canCompress,
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 if (isProcessing) {
                     CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
@@ -964,14 +1282,39 @@ fun OutputCard(
     isEditingExif: Boolean,
     onToggleExifEditor: () -> Unit,
 ) {
-    Card {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Card(
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(stringResource(R.string.output), style = MaterialTheme.typography.titleMedium)
+                Surface(
+                    modifier = Modifier.size(30.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.tertiaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Build,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+                }
+                Column {
+                    Text(stringResource(R.string.output), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "Tune the result before you save it.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             if (category == SourceCategory.IMAGE) {
                 ImageConfigSection(
@@ -991,6 +1334,8 @@ fun OutputCard(
                 OutlinedButton(
                     onClick = onPickDestination,
                     modifier = Modifier.weight(1f)
+                        .heightIn(min = 56.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Icon(Icons.Default.Folder, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -999,7 +1344,13 @@ fun OutputCard(
                         Text(destinationLabel, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
-                TextButton(onClick = onClearDestination, enabled = destinationFolder != null) {
+                TextButton(
+                    onClick = onClearDestination,
+                    enabled = destinationFolder != null,
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
                     Text(stringResource(R.string.default_text))
                 }
             }
@@ -1019,8 +1370,12 @@ fun ImageConfigSection(
     liveEstimateBytes: Long?,
     selectedFilesCount: Int,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.format), style = MaterialTheme.typography.titleSmall)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            stringResource(R.string.format),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         var expanded by remember { mutableStateOf(false) }
         val formatOptions = remember(originalFormat) {
             ImageOutputFormat.entries.filterNot { format ->
@@ -1033,7 +1388,10 @@ fun ImageConfigSection(
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor()
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 formatOptions.forEach { format ->
@@ -1047,7 +1405,11 @@ fun ImageConfigSection(
                 }
             }
         }
-        Text(stringResource(R.string.quality), style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.quality),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         val configPercentage = when (config.goal) {
             CompressionGoal.PERCENTAGE -> config.percentage
             CompressionGoal.TARGET_SIZE -> if (config.targetSizeBytes == null) config.percentage else (config.targetSizeBytes.toFloat().div(referenceBytes).times(100)).roundToInt()
@@ -1108,9 +1470,19 @@ fun ImageConfigSection(
                     }
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.width(80.dp)
+                modifier = Modifier.width(80.dp),
+                shape = RoundedCornerShape(14.dp)
             )
         }
+        Text(
+            text = if (shownPercentage == 0) {
+                "Automatic target"
+            } else {
+                "$shownPercentage% quality target"
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         if (liveEstimateBytes != null && selectedFilesCount > 0) {
             val totalEstimate = liveEstimateBytes * selectedFilesCount
             Text("${stringResource(R.string.estimated_total)} ${totalEstimate.asReadableBytes()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1188,32 +1560,32 @@ fun RemoveExifDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Text(
-                text = stringResource(R.string.edit_exif_metadata), 
+                text = stringResource(R.string.edit_exif_metadata),
                 style = MaterialTheme.typography.titleMedium
-            ) 
+            )
         },
-        text = { 
+        text = {
             Text(
-                text = if (stripExif) 
-                    "Do you want to restore EXIF metadata for the selected images?" 
-                else 
+                text = if (stripExif)
+                    "Do you want to restore EXIF metadata for the selected images?"
+                else
                     "Do you want to strip all EXIF metadata from the selected images?"
-            ) 
+            )
         },
         confirmButton = {
             Button(
-                onClick = { 
-                    onStripExifChange(!stripExif) 
+                onClick = {
+                    onStripExifChange(!stripExif)
                 }
-            ) { 
-                Text(if (stripExif) "Restore EXIF" else "Remove all EXIF") 
+            ) {
+                Text(if (stripExif) "Restore EXIF" else "Remove all EXIF")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { 
-                Text(stringResource(R.string.cancel)) 
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -1253,145 +1625,145 @@ fun ExifEditorDialog(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(R.string.edit_exif_metadata),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close EXIF editor")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.edit_exif_metadata),
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Close EXIF editor")
+                        }
                     }
-                }
-                Text(
-                    text = stringResource(R.string.changes_apply_instantly_to_the_selected_image),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    Text(
+                        text = stringResource(R.string.changes_apply_instantly_to_the_selected_image),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-                Text(stringResource(R.string.basic_info), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = currentExif.make ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(make = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.make)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.model ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(model = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.model)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.software ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(software = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.software)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Text(stringResource(R.string.basic_info), style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(
+                        value = currentExif.make ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(make = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.make)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.model ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(model = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.model)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.software ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(software = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.software)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Text(stringResource(R.string.date_and_time), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = currentExif.dateTime ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(dateTime = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.date_time)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Text(stringResource(R.string.date_and_time), style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(
+                        value = currentExif.dateTime ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(dateTime = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.date_time)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Text(stringResource(R.string.location), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = currentExif.latitude?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(latitude = it.toDoubleOrNull())) },
-                    label = { Text(stringResource(R.string.lat)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.longitude?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(longitude = it.toDoubleOrNull())) },
-                    label = { Text(stringResource(R.string.lon)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.altitude?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(altitude = it.toDoubleOrNull())) },
-                    label = { Text(stringResource(R.string.alt)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.position ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(position = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.position)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Text(stringResource(R.string.location), style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(
+                        value = currentExif.latitude?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(latitude = it.toDoubleOrNull())) },
+                        label = { Text(stringResource(R.string.lat)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.longitude?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(longitude = it.toDoubleOrNull())) },
+                        label = { Text(stringResource(R.string.lon)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.altitude?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(altitude = it.toDoubleOrNull())) },
+                        label = { Text(stringResource(R.string.alt)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.position ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(position = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.position)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Text(stringResource(R.string.camera_settings), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = currentExif.exposureTime ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(exposureTime = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.exp_time)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.fNumber ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(fNumber = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.f)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.iso?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(iso = it.toIntOrNull())) },
-                    label = { Text(stringResource(R.string.iso)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.focalLength ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(focalLength = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.focal_len)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.flash?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(flash = it.toIntOrNull())) },
-                    label = { Text(stringResource(R.string.flash)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.whiteBalance?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(whiteBalance = it.toIntOrNull())) },
-                    label = { Text(stringResource(R.string.wb)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.orientation?.toString() ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(orientation = it.toIntOrNull())) },
-                    label = { Text(stringResource(R.string.orientation)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Text(stringResource(R.string.camera_settings), style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(
+                        value = currentExif.exposureTime ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(exposureTime = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.exp_time)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.fNumber ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(fNumber = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.f)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.iso?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(iso = it.toIntOrNull())) },
+                        label = { Text(stringResource(R.string.iso)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.focalLength ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(focalLength = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.focal_len)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.flash?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(flash = it.toIntOrNull())) },
+                        label = { Text(stringResource(R.string.flash)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.whiteBalance?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(whiteBalance = it.toIntOrNull())) },
+                        label = { Text(stringResource(R.string.wb)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.orientation?.toString() ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(orientation = it.toIntOrNull())) },
+                        label = { Text(stringResource(R.string.orientation)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Text(stringResource(R.string.metadata), style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = currentExif.artist ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(artist = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.artist)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.copyright ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(copyright = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.copyright)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.description ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(description = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.description)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = currentExif.userComment ?: "",
-                    onValueChange = { onExifDataChange(currentExif.copy(userComment = it.takeIf { it.isNotBlank() })) },
-                    label = { Text(stringResource(R.string.user_comment)) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Text(stringResource(R.string.metadata), style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(
+                        value = currentExif.artist ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(artist = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.artist)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.copyright ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(copyright = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.copyright)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.description ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(description = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.description)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = currentExif.userComment ?: "",
+                        onValueChange = { onExifDataChange(currentExif.copy(userComment = it.takeIf { it.isNotBlank() })) },
+                        label = { Text(stringResource(R.string.user_comment)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                 }
                 androidx.compose.material3.HorizontalDivider()
@@ -1486,7 +1858,7 @@ fun CropEditorDialog(
         val signY = if (isTop) -1f else 1f
         val dW = dx * signX
         val dH = dy * signY
-        
+
         val dW_px = dW * aspectRatio
         val dH_px = dH * 1f
         val drivesWidth = kotlin.math.abs(dW_px) > kotlin.math.abs(dH_px)
@@ -1594,7 +1966,7 @@ fun CropEditorDialog(
 
                         val maxDialogHeight = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp * 0.45f
                         val maxPreviewWidth = outerMaxWidth - controlsWidth - sliderGap
-                        
+
                         val fitsWidthFirst = (maxPreviewWidth / effectiveAspect) <= maxDialogHeight
                         val finalPreviewWidth = if (fitsWidthFirst) maxPreviewWidth else maxDialogHeight * effectiveAspect
                         val finalPreviewHeight = if (fitsWidthFirst) maxPreviewWidth / effectiveAspect else maxDialogHeight
@@ -2043,23 +2415,64 @@ fun ProgressCard(state: CompressionUiState) {
     val processingLabel = stringResource(R.string.processing_dots)
     val completedLabel = stringResource(R.string.completed)
     val title = if (state.isProcessing) processingLabel else completedLabel
-    
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            LinearProgressIndicator(progress = { progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+
+    Card(
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "${(progress.coerceIn(0f, 1f) * 100).roundToInt()}%",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            LinearProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.14f)
+            )
             val fileSingular = stringResource(R.string.file_singular)
             val filePlural = stringResource(R.string.file_plural)
             val processedLabel = stringResource(R.string.processed)
             val fileLabel = if (state.totalCount == 1) fileSingular else filePlural
-            Text("${state.processedCount}/${state.totalCount} $fileLabel $processedLabel", style = MaterialTheme.typography.bodySmall)
+            Text(
+                "${state.processedCount}/${state.totalCount} $fileLabel $processedLabel",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             state.lastResult?.let { last ->
                 val lastItemName = remember(last.source) {
                     DocumentFile.fromSingleUri(context, last.source)?.name ?: last.source.lastPathSegment ?: ""
                 }
                 val lastItemLabel = stringResource(R.string.last_item)
-                Text("$lastItemLabel: $lastItemName", style = MaterialTheme.typography.labelSmall)
-                Text(last.message, style = MaterialTheme.typography.labelSmall)
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f)
+                ) {
+                    Column(
+                        Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text("$lastItemLabel: $lastItemName", style = MaterialTheme.typography.labelSmall)
+                        Text(last.message, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
         }
     }
@@ -2073,11 +2486,37 @@ fun ResultsCard(results: List<CompressionResult>) {
     var zoomTarget by remember { mutableStateOf<Uri?>(null) }
     var zoomLabel by remember { mutableStateOf<String?>(null) }
 
-    Card {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.results), style = MaterialTheme.typography.titleMedium)
+    Card(
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(stringResource(R.string.results), style = MaterialTheme.typography.titleMedium)
+            }
             if (successfulResults.isNotEmpty()) {
-                Text("${stringResource(R.string.total_label)} ${totalOriginal.asReadableBytes()} → ${totalCompressed.asReadableBytes()}", style = MaterialTheme.typography.bodyMedium)
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.58f)
+                ) {
+                    Text(
+                        "${stringResource(R.string.total_label)} ${totalOriginal.asReadableBytes()} → ${totalCompressed.asReadableBytes()}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                    )
+                }
             }
             LazyColumn(
                 modifier = Modifier.heightIn(max = 400.dp),
@@ -2144,42 +2583,68 @@ fun ResultRow(
     val context = LocalContext.current
     val showPreview = remember(result.source, result.output, result.success) {
         result.success && result.output != null &&
-            (DocumentFile.fromSingleUri(context, result.source)?.type?.startsWith("image/") == true)
+                (DocumentFile.fromSingleUri(context, result.source)?.type?.startsWith("image/") == true)
     }
     val sourceName = remember(result.source) {
         DocumentFile.fromSingleUri(context, result.source)?.name ?: result.source.lastPathSegment ?: "File"
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(sourceName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            sourceName,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+        )
         if (showPreview) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 // Before
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.before), style = MaterialTheme.typography.bodySmall)
-                    AsyncImage(
-                        model = result.source,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .clickable { onPreviewClick(result.source, "Original") },
-                        contentScale = ContentScale.Crop
-                    )
-                    Text(result.originalSizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall)
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+                ) {
+                    Column(
+                        Modifier.padding(vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(stringResource(R.string.before), style = MaterialTheme.typography.bodySmall)
+                        AsyncImage(
+                            model = result.source,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onPreviewClick(result.source, "Original") },
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(result.originalSizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 // After
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.after), style = MaterialTheme.typography.bodySmall)
-                    AsyncImage(
-                        model = result.output,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .clickable { result.output?.let { onPreviewClick(it, "Compressed") } },
-                        contentScale = ContentScale.Crop
-                    )
-                    Text(result.compressedSizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall)
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.48f)
+                ) {
+                    Column(
+                        Modifier.padding(vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(stringResource(R.string.after), style = MaterialTheme.typography.bodySmall)
+                        AsyncImage(
+                            model = result.output,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { result.output?.let { onPreviewClick(it, "Compressed") } },
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(result.compressedSizeBytes.asReadableBytes(), style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         } else {
@@ -2233,7 +2698,7 @@ private fun PreviewKompact() {
             onClearDefaultDestination = {},
             onDeleteOriginalsChange = {},
 
-        )
+            )
     }
 }
 
@@ -2248,7 +2713,7 @@ fun LivePreviewCard(
     isResizeEditorVisible: Boolean,
     isResizeApplied: Boolean,
     onResizeClick: () -> Unit,
-    
+
     onRotateClick: () -> Unit,
     onColorFilterClick: () -> Unit,
     exifEditingEnabled: Boolean = false,
@@ -2265,8 +2730,13 @@ fun LivePreviewCard(
 ) {
     var zoomTarget by remember { mutableStateOf<Uri?>(null) }
     var zoomLabel by remember { mutableStateOf<String?>(null) }
-    Card(modifier) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.62f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -2275,7 +2745,26 @@ fun LivePreviewCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.live_preview), style = MaterialTheme.typography.titleMedium)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(30.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.Image,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+                        }
+                        Text(stringResource(R.string.live_preview), style = MaterialTheme.typography.titleMedium)
+                    }
                     TextButton(
                         onClick = onResetEditsClick,
                         colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
@@ -2405,6 +2894,23 @@ fun LivePreviewCard(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
                             Text(stringResource(R.string.updating_preview), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                        }
+                    }
+                }
+                if (!hasPreviews && !showLoadingOnly && livePreview.errorMessage == null) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(148.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                stringResource(R.string.no_preview_available),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -2641,9 +3147,9 @@ fun ResizeEditorDialog(
 
     var widthStr by remember { mutableStateOf(if (!isPercentage) config?.width?.takeIf { it > 0 }?.toString() ?: "" else "") }
     var heightStr by remember { mutableStateOf(if (!isPercentage) config?.height?.takeIf { it > 0 }?.toString() ?: "" else "") }
-    
+
     var maintainAspect by remember { mutableStateOf(config?.maintainAspectRatio ?: true) }
-    
+
     val imageDimensions = rememberImageDimensions(previewUri)
     val aspectRatio = rememberImageAspectRatio(previewUri)
 
@@ -2700,14 +3206,14 @@ fun ResizeEditorDialog(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                
+
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Slider percentage
                     Column(modifier = Modifier.fillMaxWidth().alpha(if (isPercentage) 1f else 0.5f)) {
                         Text("${stringResource(R.string.scale_label)} ${currentPct.toInt()}%", style = MaterialTheme.typography.bodyMedium)
                         Slider(
                             value = currentPct,
-                            onValueChange = { 
+                            onValueChange = {
                                 if (isPercentage) {
                                     currentPct = it
                                     imageDimensions?.let { dims ->
@@ -2726,10 +3232,10 @@ fun ResizeEditorDialog(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = widthStr,
-                            onValueChange = { 
+                            onValueChange = {
                                 if (widthStr != it) {
                                     isPercentage = false // Lock percentage
-                                    widthStr = it 
+                                    widthStr = it
                                     if (maintainAspect && aspectRatio != null && it.isNotEmpty()) {
                                         it.toIntOrNull()?.let { w ->
                                             heightStr = (w / aspectRatio).roundToInt().toString()
@@ -2743,10 +3249,10 @@ fun ResizeEditorDialog(
                         )
                         OutlinedTextField(
                             value = heightStr,
-                            onValueChange = { 
+                            onValueChange = {
                                 if (heightStr != it) {
                                     isPercentage = false // Lock percentage
-                                    heightStr = it 
+                                    heightStr = it
                                     if (maintainAspect && aspectRatio != null && it.isNotEmpty()) {
                                         it.toIntOrNull()?.let { h ->
                                             widthStr = (h * aspectRatio).roundToInt().toString()
@@ -2759,7 +3265,7 @@ fun ResizeEditorDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = maintainAspect, onCheckedChange = { maintainAspect = it })
                         Text(stringResource(R.string.resize_keep_aspect))
@@ -2807,14 +3313,14 @@ fun FiltersEditorDialog(
 ) {
     var localColorConfig by remember { androidx.compose.runtime.mutableStateOf(currentColorConfig ?: com.kompact.model.ColorFilterConfig()) }
     var localBgConfig by remember { androidx.compose.runtime.mutableStateOf(currentBackgroundConfig ?: com.kompact.model.BackgroundConfig()) }
-    
+
     var selectedTab by remember { androidx.compose.runtime.mutableStateOf(
         if (currentColorConfig == null) "NONE"
         else currentColorConfig.filterType.name
     ) }
 
     val filterTypes = com.kompact.model.ColorFilterType.values().toList()
-    
+
     androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
@@ -2843,7 +3349,7 @@ fun FiltersEditorDialog(
                         Icon(androidx.compose.material.icons.Icons.Default.Close, contentDescription = "Close")
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
 
                 Box(
@@ -2874,7 +3380,7 @@ fun FiltersEditorDialog(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                
+
                 androidx.compose.foundation.lazy.LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -2887,15 +3393,15 @@ fun FiltersEditorDialog(
                     } else {
                         itemsList.add("BACKGROUND")
                     }
-                    
+
                     items(itemsList.size) { index ->
                         val item = itemsList[index]
                         val isSelected = (selectedTab == item)
-                        
+
                         Column(
                             modifier = Modifier
                                 .width(64.dp)
-                                .clickable { 
+                                .clickable {
                                     selectedTab = item
                                     if(item != "BACKGROUND") {
                                         val newFilterType = com.kompact.model.ColorFilterType.valueOf(item)
@@ -2965,7 +3471,7 @@ fun FiltersEditorDialog(
                         }
                     }
                 }
-                
+
                 Spacer(Modifier.height(16.dp))
 
                 if (selectedTab == "BACKGROUND") {
@@ -2975,7 +3481,7 @@ fun FiltersEditorDialog(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
-                    
+
                     if (showJpegWarning && localBgConfig.type == com.kompact.model.BackgroundType.TRANSPARENT) {
                         Text(
                             text = stringResource(R.string.warning_jpeg_does_not_support_transparency),
@@ -3032,15 +3538,15 @@ fun FiltersEditorDialog(
                             }
                         )
                     }
-                } 
-                
+                }
+
                 if (selectedTab == "CUSTOM") {
                     Text(
                         text = stringResource(R.string.hue),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
+
                     val gradientBrush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
                             androidx.compose.ui.graphics.Color.Red,
@@ -3067,8 +3573,8 @@ fun FiltersEditorDialog(
                             )
                         )
                     }
-                } 
-                
+                }
+
                 if (selectedTab != "NONE" && selectedTab != "BACKGROUND") {
                     Text(
                         text = "${stringResource(R.string.intensity)}: ${(localColorConfig.intensity * 100).toInt()}%",
@@ -3084,9 +3590,9 @@ fun FiltersEditorDialog(
 
                 Spacer(Modifier.height(24.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    TextButton(onClick = { 
+                    TextButton(onClick = {
                         selectedTab = "NONE"
-                        localColorConfig = com.kompact.model.ColorFilterConfig() 
+                        localColorConfig = com.kompact.model.ColorFilterConfig()
                         localBgConfig = com.kompact.model.BackgroundConfig()
                     }) {
                         Text(stringResource(R.string.reset))
@@ -3169,7 +3675,7 @@ fun RotateEditorDialog(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                
+
                 Text(text = stringResource(R.string.degrees_format, localRotation.toInt()), style = MaterialTheme.typography.bodyMedium)
                 androidx.compose.material3.Slider(
                     value = localRotation,
@@ -3178,12 +3684,12 @@ fun RotateEditorDialog(
                     steps = 35,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(onClick = { 
+                    Button(onClick = {
                         val rem = kotlin.math.abs((localRotation % 90f).toInt())
                         if (rem != 0) {
                             localRotation = -90f
@@ -3191,13 +3697,13 @@ fun RotateEditorDialog(
                             localRotation -= 90f
                             if (localRotation < -180f) localRotation += 360f
                         }
-                    }) { 
+                    }) {
                         Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.RotateLeft, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.rotate_left)) 
+                        Text(stringResource(R.string.rotate_left))
                     }
                     Spacer(Modifier.width(16.dp))
-                    Button(onClick = { 
+                    Button(onClick = {
                         val rem = kotlin.math.abs((localRotation % 90f).toInt())
                         if (rem != 0) {
                             localRotation = 90f
@@ -3205,10 +3711,10 @@ fun RotateEditorDialog(
                             localRotation += 90f
                             if (localRotation > 180f) localRotation -= 360f
                         }
-                    }) { 
+                    }) {
                         Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.RotateRight, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.rotate_right)) 
+                        Text(stringResource(R.string.rotate_right))
                     }
                 }
 
